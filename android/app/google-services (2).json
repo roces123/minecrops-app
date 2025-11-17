@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "543666819344",
+    "project_id": "minecropsdb",
+    "storage_bucket": "minecropsdb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:543666819344:android:efb226a090677b32185595",
+        "android_client_info": {
+          "package_name": "com.example.minecrops"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDgVeQVmdFxDcsxHt5nkfG2r8TvqXobkM0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:543666819344:android:64ab75329f080355185595",
+        "android_client_info": {
+          "package_name": "com.example.untitled"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDgVeQVmdFxDcsxHt5nkfG2r8TvqXobkM0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

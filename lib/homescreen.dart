@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'croplistscreen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -9,9 +12,10 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // Updated banner asset
   final List<String> _bannerAssets = const [
-    'assets/farmer_banner.png', // Assuming this is the "Are you a Farmer?" image
+    'assets/farmer.png',
+    'assets/student.png',
+    'assets/planter.png',
   ];
 
   bool _isSearching = false;
@@ -23,6 +27,24 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void _navigateToCropList(BuildContext context, String category) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CropListScreen(categoryName: category),
+      ),
+    );
+  }
+
+  String _getField(Map<String, dynamic> data, List<String> possibleKeys) {
+    for (final key in possibleKeys) {
+      if (data.containsKey(key) && data[key] != null) {
+        return data[key].toString();
+      }
+    }
+    return '';
+  }
+
   PreferredSizeWidget _buildCustomAppBar() {
     return AppBar(
       backgroundColor: const Color(0xFF6B8E23),
@@ -31,23 +53,24 @@ class _HomeScreenState extends State<HomeScreen> {
       toolbarHeight: 66,
       leading: Padding(
         padding: const EdgeInsets.only(left: 10, top: 3, bottom: 3),
-        child: ClipOval(
-          child: Image.asset(
-            'assets/logo.png',
-            fit: BoxFit.cover,
-            width: 50,
-            height: 50,
+        child: InkWell(
+          // Navigation to AboutAppScreen removed
+          onTap: () {},
+          borderRadius: BorderRadius.circular(50),
+          child: ClipOval(
+            child: Image.asset(
+              'assets/logo.png',
+              fit: BoxFit.cover,
+              width: 50,
+              height: 50,
+            ),
           ),
         ),
       ),
       title: !_isSearching ? _buildTitleColumn() : _buildSearchField(),
       actions: [
         IconButton(
-          icon: Icon(
-            _isSearching ? Icons.close : Icons.search,
-            color: Colors.white,
-            size: 28,
-          ),
+          icon: Icon(_isSearching ? Icons.close : Icons.search, color: Colors.white, size: 28),
           onPressed: () {
             setState(() {
               if (_isSearching) {
@@ -114,25 +137,19 @@ class _HomeScreenState extends State<HomeScreen> {
         return _buildImageBanner(_bannerAssets[index]);
       },
       options: CarouselOptions(
-        height: 220.0,
+        height: 180.0,
         enlargeCenterPage: true,
-        autoPlay: true, // Set to true for auto-play as in the image
+        autoPlay: false,
         aspectRatio: 16 / 9,
-        viewportFraction: 1.0, // Changed to 1.0 to show a single banner fully
-        initialPage: 0,
-        enableInfiniteScroll: true,
-        reverse: false,
-        autoPlayInterval: const Duration(seconds: 3),
-        autoPlayAnimationDuration: const Duration(milliseconds: 800),
-        autoPlayCurve: Curves.fastOutSlowIn,
-        scrollDirection: Axis.horizontal,
+        viewportFraction: 0.98,
       ),
     );
   }
 
   Widget _buildImageBanner(String imageAssetPath) {
+    const double newHeight = 180.0;
+
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 5.0),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12.0),
         boxShadow: [
@@ -143,21 +160,36 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12.0),
-        child: Image.asset(
-          imageAssetPath,
-          fit: BoxFit.cover,
-          width: double.infinity,
-          height: 220,
-        ),
+      child: Stack(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12.0),
+            child: Image.asset(
+              imageAssetPath,
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: newHeight,
+            ),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12.0),
+              gradient: LinearGradient(
+                colors: [Colors.black.withOpacity(0.25), Colors.transparent],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            width: double.infinity,
+            height: newHeight,
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildCategoriesSection(BuildContext context) {
     final categories = [
-      {'name': "All Crops", 'img': 'assets/all_crops.jpg'}, // Placeholder for all crops
       {'name': "Fruit Crops", 'img': 'assets/fruits.jpg'},
       {'name': "Grain Crops", 'img': 'assets/grains.jpg'},
       {'name': "Roots Crops", 'img': 'assets/roots.jpg'},
@@ -172,33 +204,13 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                "Categories",
-                style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold),
-              ),
-              if (categories.isNotEmpty) // Only show "view all" if there are categories
-                Padding(
-                  padding: const EdgeInsets.only(right: 16.0),
-                  child: GestureDetector(
-                    onTap: () => print('View All Categories tapped'),
-                    child: const Text(
-                      "view all",
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.blue, // Or your app's accent color
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
+          const Text(
+            "Categories",
+            style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10.0),
           SizedBox(
-            height: 100, // Adjusted height for circular categories
+            height: 120,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: categories.length,
@@ -208,7 +220,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 return _buildCategoryItem(
                   categoryName,
                   categories[idx]['img']!,
-                      () => print('Navigation for category: $categoryName is removed.'),
+                      () {
+                    _navigateToCropList(context, categoryName);
+                  },
                 );
               },
             ),
@@ -226,17 +240,18 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           CircleAvatar(
             backgroundColor: Colors.white,
-            radius: 30, // Slightly larger radius
+            radius: 28,
             backgroundImage: AssetImage(imageAsset),
           ),
-          const SizedBox(height: 5), // Smaller spacing
+          const SizedBox(height: 7),
           SizedBox(
-            width: 70, // Adjusted width for category text
+            width: 95,
+            height: 40,
             child: Text(
               title,
-              style: const TextStyle(fontSize: 12, height: 1.2),
+              style: const TextStyle(fontSize: 13, height: 1.2),
               maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+              overflow: TextOverflow.visible,
               textAlign: TextAlign.center,
             ),
           ),
@@ -245,22 +260,15 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildStaticCommonCropsSection() {
-    final crops = [
-      {'name': 'Palay / Rice', 'img': 'assets/rice.jpg'},
-      {'name': 'Sugar Cane', 'img': 'assets/sugarcane.jpg'},
-      {'name': 'Corn / Mais', 'img': 'assets/corn.jpg'},
-      {'name': 'Mango', 'img': 'assets/mango.jpg'},
-      {'name': 'Pineapple', 'img': 'assets/pineapple.jpg'},
-      {'name': 'Eggplant / Talong', 'img': 'assets/eggplant.jpg'},
-      {'name': 'Banana / Saging', 'img': 'assets/banana.jpg'},
-      {'name': 'Tomato / Kamatis', 'img': 'assets/tomato.jpg'},
-      {'name': 'Cassava', 'img': 'assets/cassava.jpg'},
-    ];
+  Widget _buildCommonAndSearchableCropsSection(BuildContext context) {
+    Query query = FirebaseFirestore.instance.collection('crops');
+    String title = "Common Crops";
 
-    final filtered = _searchQuery.isEmpty
-        ? crops
-        : crops.where((c) => c['name']!.toLowerCase().contains(_searchQuery.toLowerCase())).toList();
+    if (_isSearching && _searchQuery.isNotEmpty) {
+      title = "Search Results";
+    } else {
+      query = query.where('IsCommon', isEqualTo: true);
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -268,24 +276,70 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            _searchQuery.isEmpty ? "Common Crops" : "Search Results",
+            title,
             style: const TextStyle(fontSize: 21, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 11.0),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: filtered.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3, // Changed to 3 columns as per image
-              mainAxisSpacing: 12.0,
-              crossAxisSpacing: 12.0,
-              childAspectRatio: 0.8, // Adjusted for better card proportion
-            ),
-            itemBuilder: (context, i) {
-              return _buildLocalCropItem(
-                filtered[i]['name']!,
-                filtered[i]['img']!,
+          StreamBuilder<QuerySnapshot>(
+            stream: query.snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const SizedBox(
+                  height: 120,
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              if (snapshot.hasError) {
+                return Center(child: Text('❌ Error loading crops: ${snapshot.error}', style: TextStyle(color: Colors.red)));
+              }
+
+              final docs = snapshot.data?.docs ?? [];
+
+              final List<Map<String, dynamic>> crops = docs.map((d) {
+                final map = d.data() as Map<String, dynamic>;
+                return {...map, '_docId': d.id};
+              }).where((map) {
+                if (_searchQuery.isEmpty) {
+                  return true;
+                }
+                final name = _getField(map, ['name', 'Name', 'cropName']).toLowerCase();
+                return name.contains(_searchQuery.toLowerCase());
+              }).toList();
+
+              if (crops.isEmpty) {
+                return SizedBox(
+                  height: 80,
+                  child: Center(child: Text(_isSearching && _searchQuery.isNotEmpty
+                      ? "No crops match your search."
+                      : "No common crops available. Check Firestore 'IsCommon' field.")),
+                );
+              }
+
+              return AnimatedSwitcher(
+                duration: const Duration(milliseconds: 350),
+                child: GridView.builder(
+                  key: ValueKey<String>('grid-${crops.length}-${_searchQuery.length}-${_isSearching}'),
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: crops.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 12.0,
+                    crossAxisSpacing: 12.0,
+                    childAspectRatio: 0.75,
+                  ),
+                  itemBuilder: (context, i) {
+                    final crop = crops[i];
+                    final name = _getField(crop, ['name', 'Name']) == '' ? 'Unnamed' : _getField(crop, ['name', 'Name']);
+                    final imageUrl = _getField(crop, ['Image Url', 'imageUrl', 'image', 'ImageUrl']);
+
+                    return GestureDetector(
+                      onTap: () => print('Detail view removed.'),
+                      child: _buildNetworkCropItem(name, imageUrl, tag: crop['_docId'] ?? 'crop-$i'),
+                    );
+                  },
+                ),
               );
             },
           ),
@@ -294,7 +348,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildLocalCropItem(String name, String imageAsset) {
+  Widget _buildNetworkCropItem(String cropName, String imageUrl, {required String tag}) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -313,17 +367,24 @@ class _HomeScreenState extends State<HomeScreen> {
           Expanded(
             child: ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(9.0)),
-              child: Image.asset(
-                imageAsset,
-                width: double.infinity,
-                fit: BoxFit.cover,
+              child: Hero(
+                tag: tag,
+                child: imageUrl.isNotEmpty
+                    ? CachedNetworkImage(
+                  imageUrl: imageUrl,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                  errorWidget: (context, url, error) => const Center(child: Icon(Icons.broken_image, size: 30)),
+                )
+                    : const Center(child: Icon(Icons.image_not_supported, size: 30, color: Colors.grey)),
               ),
             ),
           ),
           Padding(
             padding: const EdgeInsets.all(6.0),
             child: Text(
-              name,
+              cropName,
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
               maxLines: 2,
@@ -335,14 +396,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildAllCropsSection() {
-    final allCrops = [
-      {'name': 'Watermelon', 'img': 'assets/watermelon.jpg'},
-      {'name': 'Coconut', 'img': 'assets/coconut.jpg'},
-      {'name': 'Cabbage', 'img': 'assets/cabbage.jpg'},
-      {'name': 'Carrot', 'img': 'assets/carrot.jpg'},
-      // Add more crops as needed to match the design
-    ];
+  Widget _buildAllCropsSection(BuildContext context) {
+    Query query = FirebaseFirestore.instance
+        .collection('crops')
+        .where('IsCommon', isEqualTo: false)
+        .limit(2);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -356,34 +414,65 @@ class _HomeScreenState extends State<HomeScreen> {
                 "All Crops",
                 style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold),
               ),
-              GestureDetector(
-                onTap: () => print('View All Crops tapped'),
+              TextButton(
+                onPressed: () {
+                  _navigateToCropList(context, "All Crops");
+                },
                 child: const Text(
                   "view all",
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.blue, // Or your app's accent color
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: TextStyle(color: Color(0xFF6B8E23), fontWeight: FontWeight.bold),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 11.0),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: allCrops.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2, // 2 columns for "All Crops" section
-              mainAxisSpacing: 12.0,
-              crossAxisSpacing: 12.0,
-              childAspectRatio: 0.8,
-            ),
-            itemBuilder: (context, i) {
-              return _buildLocalCropItem(
-                allCrops[i]['name']!,
-                allCrops[i]['img']!,
+          const SizedBox(height: 10.0),
+          StreamBuilder<QuerySnapshot>(
+            stream: query.snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const SizedBox(
+                  height: 140,
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              if (snapshot.hasError) {
+                return Text('Error loading other crops: ${snapshot.error}');
+              }
+
+              final docs = snapshot.data?.docs ?? [];
+              final List<Map<String, dynamic>> crops = docs.map((d) {
+                final map = d.data() as Map<String, dynamic>;
+                return {...map, '_docId': d.id};
+              }).toList();
+
+              if (crops.isEmpty) {
+                return const SizedBox(
+                  height: 60,
+                  child: Center(child: Text("No other crops available.")),
+                );
+              }
+
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: crops.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 12.0,
+                  crossAxisSpacing: 12.0,
+                  childAspectRatio: 0.75,
+                ),
+                itemBuilder: (context, i) {
+                  final crop = crops[i];
+                  final name = _getField(crop, ['name', 'Name']) == '' ? 'Unnamed' : _getField(crop, ['name', 'Name']);
+                  final imageUrl = _getField(crop, ['Image Url', 'imageUrl', 'image', 'ImageUrl']);
+
+                  return GestureDetector(
+                    onTap: () => print('Detail view removed.'),
+                    child: _buildNetworkCropItem(name, imageUrl, tag: crop['_docId'] ?? 'other-crop-$i'),
+                  );
+                },
               );
             },
           ),
@@ -401,15 +490,17 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            const SizedBox(height: 10),
-            _buildMainBannerCarousel(),
-            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.only(top: 10.0),
+              child: _buildMainBannerCarousel(),
+            ),
+            const SizedBox(height: 20.0),
             _buildCategoriesSection(context),
-            const SizedBox(height: 20),
-            _buildStaticCommonCropsSection(),
-            const SizedBox(height: 20), // Added spacing
-            _buildAllCropsSection(), // New "All Crops" section
-            const SizedBox(height: 40),
+            const SizedBox(height: 20.0),
+            _buildCommonAndSearchableCropsSection(context),
+            const SizedBox(height: 20.0),
+            _buildAllCropsSection(context),
+            const SizedBox(height: 40.0),
           ],
         ),
       ),

@@ -1,9 +1,22 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'splashscreen.dart';
+import 'firebase_options.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (e) {
+    // Optional: Add logging or display a startup error screen if initialization fails
+    print("Firebase initialization failed: $e");
+  }
+  // ------------------------------------
+
   runApp(const MyApp());
 }
 
