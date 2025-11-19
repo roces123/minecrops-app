@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'cropdetailscreen.dart';
 
 class CropListScreen extends StatelessWidget {
   final String categoryName;
@@ -82,7 +83,6 @@ class CropListScreen extends StatelessWidget {
     );
   }
 
-  // Added BuildContext parameter for navigation
   Widget _buildCropCard(BuildContext context, String name, String imageUrl, String docId, Map<String, dynamic> cropData) {
     return Card(
       elevation: 2,
@@ -96,16 +96,12 @@ class CropListScreen extends StatelessWidget {
                 tag: docId,
                 child: GestureDetector(
                   onTap: () {
-                    // REPLACED navigation with a print statement
-                    print('Navigation to CropDetailScreen for $name temporarily disabled.');
-                    /*
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => CropDetailScreen(cropData: cropData),
                       ),
                     );
-                    */
                   },
                   child: CachedNetworkImage(
                     imageUrl: imageUrl,

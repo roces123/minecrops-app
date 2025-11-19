@@ -72,7 +72,7 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     // Determine the size: 60% of the screen width for a centered video
     final screenWidth = MediaQuery.of(context).size.width;
-    final videoSize = screenWidth * 0.6; // Adjust 0.6 (60%) if needed
+    final videoSize = screenWidth * 1.0; // Adjust 0.6 (60%) if needed
 
     return Scaffold(
       backgroundColor: Colors.white,

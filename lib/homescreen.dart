@@ -3,6 +3,8 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'croplistscreen.dart';
+import 'cropdetailscreen.dart';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -39,7 +41,12 @@ class _HomeScreenState extends State<HomeScreen> {
   String _getField(Map<String, dynamic> data, List<String> possibleKeys) {
     for (final key in possibleKeys) {
       if (data.containsKey(key) && data[key] != null) {
-        return data[key].toString();
+        // Ensure that the value is treated as a string and not empty
+        final value = data[key];
+        final stringValue = value.toString().trim();
+        if (stringValue.isNotEmpty) {
+          return stringValue;
+        }
       }
     }
     return '';
@@ -51,19 +58,15 @@ class _HomeScreenState extends State<HomeScreen> {
       elevation: 0,
       automaticallyImplyLeading: false,
       toolbarHeight: 66,
+      // The leading icon is no longer clickable and serves as a static logo.
       leading: Padding(
         padding: const EdgeInsets.only(left: 10, top: 3, bottom: 3),
-        child: InkWell(
-          // Navigation to AboutAppScreen removed
-          onTap: () {},
-          borderRadius: BorderRadius.circular(50),
-          child: ClipOval(
-            child: Image.asset(
-              'assets/logo.png',
-              fit: BoxFit.cover,
-              width: 50,
-              height: 50,
-            ),
+        child: ClipOval(
+          child: Image.asset(
+            'assets/logo.png',
+            fit: BoxFit.cover,
+            width: 50,
+            height: 50,
           ),
         ),
       ),
@@ -137,7 +140,7 @@ class _HomeScreenState extends State<HomeScreen> {
         return _buildImageBanner(_bannerAssets[index]);
       },
       options: CarouselOptions(
-        height: 180.0,
+        height: 220.0,
         enlargeCenterPage: true,
         autoPlay: false,
         aspectRatio: 16 / 9,
@@ -147,8 +150,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildImageBanner(String imageAssetPath) {
-    const double newHeight = 180.0;
-
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12.0),
@@ -168,7 +169,7 @@ class _HomeScreenState extends State<HomeScreen> {
               imageAssetPath,
               fit: BoxFit.cover,
               width: double.infinity,
-              height: newHeight,
+              height: 220,
             ),
           ),
           Container(
@@ -181,7 +182,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             width: double.infinity,
-            height: newHeight,
+            height: 220,
           ),
         ],
       ),
@@ -324,7 +325,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: crops.length,
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
+                    crossAxisCount: 3,
                     mainAxisSpacing: 12.0,
                     crossAxisSpacing: 12.0,
                     childAspectRatio: 0.75,
@@ -335,7 +336,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     final imageUrl = _getField(crop, ['Image Url', 'imageUrl', 'image', 'ImageUrl']);
 
                     return GestureDetector(
-                      onTap: () => print('Detail view removed.'),
+                      onTap: () => _openCropDetails(context, crop),
                       child: _buildNetworkCropItem(name, imageUrl, tag: crop['_docId'] ?? 'crop-$i'),
                     );
                   },
@@ -469,7 +470,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   final imageUrl = _getField(crop, ['Image Url', 'imageUrl', 'image', 'ImageUrl']);
 
                   return GestureDetector(
-                    onTap: () => print('Detail view removed.'),
+                    onTap: () => _openCropDetails(context, crop),
                     child: _buildNetworkCropItem(name, imageUrl, tag: crop['_docId'] ?? 'other-crop-$i'),
                   );
                 },
@@ -479,6 +480,18 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
+  }
+
+  void _openCropDetails(BuildContext context, Map<String, dynamic> cropData) {
+    Navigator.of(context).push(PageRouteBuilder(
+      transitionDuration: const Duration(milliseconds: 360),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return FadeTransition(
+          opacity: animation,
+          child: CropDetailScreen(cropData: cropData),
+        );
+      },
+    ));
   }
 
   @override
