@@ -3,6 +3,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'croplistscreen.dart';
+import 'aboutappscreen.dart';
 import 'cropdetailscreen.dart';
 
 
@@ -38,6 +39,15 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _navigateToAboutApp(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AboutAppScreen(),
+      ),
+    );
+  }
+
   String _getField(Map<String, dynamic> data, List<String> possibleKeys) {
     for (final key in possibleKeys) {
       if (data.containsKey(key) && data[key] != null) {
@@ -58,15 +68,18 @@ class _HomeScreenState extends State<HomeScreen> {
       elevation: 0,
       automaticallyImplyLeading: false,
       toolbarHeight: 66,
-      // The leading icon is no longer clickable and serves as a static logo.
       leading: Padding(
         padding: const EdgeInsets.only(left: 10, top: 3, bottom: 3),
-        child: ClipOval(
-          child: Image.asset(
-            'assets/logo.png',
-            fit: BoxFit.cover,
-            width: 50,
-            height: 50,
+        child: InkWell(
+          onTap: () => _navigateToAboutApp(context),
+          borderRadius: BorderRadius.circular(50),
+          child: ClipOval(
+            child: Image.asset(
+              'assets/logo.png',
+              fit: BoxFit.cover,
+              width: 50,
+              height: 50,
+            ),
           ),
         ),
       ),
