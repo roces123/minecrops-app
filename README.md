@@ -69,4 +69,4 @@ Tap on the downloaded file "app-release.apk" and select "Install" when prompted.
 
 ## 📄 License
 
-This project is licensed under the **MIT License** - Copyright (c) 2025 MineCrops. See the [LICENSE.md](LICENSE.md) file for details.
+This project is licensed under the **MIT License** - Copyright (c) 2025 MineCrops. See the [LICENSE](LICENSE) file for details.
