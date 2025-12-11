@@ -1,6 +1,6 @@
 # 🌾 MineCrops App (Flutter)
 
-A simple Flutter app and a smart farming companion, designed to empower farmers, students, and small planters with clear, reliable, and easy-to-understand crop information. It helps users make informed decisions to save on inputs, increase yield, and farm smarter.
+A simple Flutter app and a farming companion, designed to empower farmers, students, and small planters with clear, reliable, and easy-to-understand crop information. It helps users make informed decisions to save on inputs, increase yield, and farm smarter.
 
 ---
 
